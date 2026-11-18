@@ -1,3 +1,8 @@
+import { useSession } from './hooks/useSession';
+import { useEditorial } from './hooks/useEditorial';
+import * as authService from './services/auth';
+import { errorMessage } from './lib/errors';
+import type { AuthUser, Client, EditorialContent, ContentFormat, ContentStatus } from './types/domain';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   LayoutDashboard,
@@ -38,47 +43,6 @@ import {
 // ============================================================================
 
 type AuthScreen = 'login' | 'register' | 'forgot-password' | 'reset-password';
-
-interface AuthUser {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
-
-type ContentFormat = 'Estático' | 'Carrossel' | 'Reels' | 'Stories' | 'Vídeo';
-
-type ContentStatus =
-  | 'Planejado'
-  | 'Em produção'
-  | 'Em revisão'
-  | 'Aguardando aprovação'
-  | 'Aprovado'
-  | 'Agendado'
-  | 'Publicado'
-  | 'Pendente';
-
-interface Client {
-  id: string;
-  name: string;
-  segment: string;
-  accentColor: string;
-  monthlyGoal: number;
-  manager: string;
-}
-
-interface EditorialContent {
-  id: string;
-  clientId: string;
-  title: string;
-  date: string; // YYYY-MM-DD
-  time: string; // HH:mm
-  format: ContentFormat;
-  status: ContentStatus;
-  copy: string;
-  artText: string;
-  briefing: string;
-}
 
 type ActiveModule = 'overview' | 'calendar' | 'clients' | 'production' | 'pending';
 type CalendarViewMode = 'daily' | 'weekly' | 'monthly';
@@ -225,218 +189,6 @@ const formatFullDateBR = (iso: string): string => {
 // DADOS FICTÍCIOS INICIAIS (5 CLIENTES + CONTEÚDOS DISTRIBUÍDOS NA SEMANA ATUAL)
 // ============================================================================
 
-const createInitialClients = (): Client[] => [
-  {
-    id: 'cli-1',
-    name: 'Vértice Arquitetura',
-    segment: 'Arquitetura & Design',
-    accentColor: 'rgb(37, 99, 235)', // Azul Primário
-    monthlyGoal: 16,
-    manager: 'Camila Rocha'
-  },
-  {
-    id: 'cli-2',
-    name: 'NaturaVita Saúde',
-    segment: 'Clínica & Bem-estar',
-    accentColor: 'rgb(16, 185, 129)', // Verde Esmeralda Secundário
-    monthlyGoal: 20,
-    manager: 'Lucas Mendes'
-  },
-  {
-    id: 'cli-3',
-    name: 'Apex Tech Solutions',
-    segment: 'SaaS B2B',
-    accentColor: 'rgb(124, 58, 237)', // Violeta Terciário
-    monthlyGoal: 12,
-    manager: 'Mariana Silva'
-  },
-  {
-    id: 'cli-4',
-    name: 'Café Torra Nobre',
-    segment: 'Gastronomia & E-commerce',
-    accentColor: 'rgb(217, 119, 6)', // Âmbar Terciário
-    monthlyGoal: 24,
-    manager: 'Rafael Costa'
-  },
-  {
-    id: 'cli-5',
-    name: 'Aura Dermocosméticos',
-    segment: 'Beleza & Skincare',
-    accentColor: 'rgb(219, 39, 119)', // Magenta Terciário
-    monthlyGoal: 18,
-    manager: 'Camila Rocha'
-  }
-];
-
-const createInitialContents = (): EditorialContent[] => {
-  const today = new Date();
-  const monday = getMondayOfWeek(today);
-  const d = (offsetFromMonday: number) => toISODate(addDays(monday, offsetFromMonday));
-
-  return [
-    {
-      id: 'cnt-101',
-      clientId: 'cli-1',
-      title: 'Tendências de Iluminação Natural em Projetos Residenciais',
-      date: d(0),
-      time: '11:00',
-      format: 'Carrossel',
-      status: 'Publicado',
-      copy: 'A luz natural transforma não apenas a estética, mas o bem-estar dentro de casa. Deslize e veja 4 soluções arquitetônicas que aplicamos nos nossos últimos projetos.',
-      artText: 'Capa: Como a luz natural valoriza cada m² do seu projeto.\nSlide 2: Claraboias minimalistas\nSlide 3: Integração sala + varanda',
-      briefing: 'Usar fotos reais do projeto Casa Jardins com tipografia editorial limpa.'
-    },
-    {
-      id: 'cnt-102',
-      clientId: 'cli-2',
-      title: '5 Hábitos Matinais para Regular o Ciclo Circadiano',
-      date: d(0),
-      time: '18:00',
-      format: 'Reels',
-      status: 'Publicado',
-      copy: 'Acordar cansado não é normal. Ajustar os primeiros 30 minutos do seu dia muda completamente sua disposição e qualidade do sono.',
-      artText: 'Gancho na tela: 3 erros que acabam com sua energia logo cedo.',
-      briefing: 'Gravação com Dra. Helena em consultório, cortes dinâmicos a cada 3 segundos.'
-    },
-    {
-      id: 'cnt-103',
-      clientId: 'cli-3',
-      title: 'Como Reduzir o CAC em Operações B2B com Automação de Funil',
-      date: d(1),
-      time: '09:30',
-      format: 'Carrossel',
-      status: 'Agendado',
-      copy: 'Escalar vendas B2B sem inflar o time comercial exige processos previsíveis. Veja a estrutura de nutrição que aplicamos em 40+ empresas.',
-      artText: 'Capa: O blueprint para reduzir seu CAC em até 32% neste trimestre.',
-      briefing: 'Layout corporativo escuro com gráficos simplificados e dados reais anonimizados.'
-    },
-    {
-      id: 'cnt-104',
-      clientId: 'cli-5',
-      title: 'Rotina Minimalista: Vitamina C + Protetor Solar',
-      date: d(1),
-      time: '19:00',
-      format: 'Estático',
-      status: 'Aprovado',
-      copy: 'Menos passos, mais resultado. A combinação antioxidante que protege contra radicais livres e uniformiza o tom da pele desde a primeira semana.',
-      artText: 'Dupla essencial da manhã: Proteção + Luminosidade.',
-      briefing: 'Foto macro da textura do sérum com iluminação quente.'
-    },
-    {
-      id: 'cnt-105',
-      clientId: 'cli-4',
-      title: 'Bastidores da Torra Média: Notas Sensoriais de Caramelo',
-      date: d(2),
-      time: '10:00',
-      format: 'Reels',
-      status: 'Aguardando aprovação',
-      copy: 'Do grão verde à xícara perfeita: acompanhe o ponto exato onde desenvolvemos a doçura natural do nosso microlote Mantiqueira.',
-      artText: 'Legenda dinâmica: O segredo da torra artesanal.',
-      briefing: 'Vídeo vertical 15s com som ambiente da torrefação e trilha lo-fi sutil.'
-    },
-    {
-      id: 'cnt-106',
-      clientId: 'cli-1',
-      title: 'Antes e Depois: Reforma de Apartamento 140m²',
-      date: d(2),
-      time: '17:30',
-      format: 'Carrossel',
-      status: 'Em revisão',
-      copy: 'Integração total entre cozinha gourmet e living. Veja como eliminamos paredes estruturais visuais para criar amplitude.',
-      artText: 'Capa: Transformação completa em 90 dias de obra.',
-      briefing: 'Comparativo lado a lado com planta baixa humanizada no último slide.'
-    },
-    {
-      id: 'cnt-107',
-      clientId: 'cli-3',
-      title: 'Case de Sucesso: +140% em Pipeline Qualificado',
-      date: d(-2),
-      time: '14:00',
-      format: 'Estático',
-      status: 'Pendente',
-      copy: 'Como a reestruturação do onboarding transformou leads frios em contratos recorrentes em 60 dias.',
-      artText: '+140% em Pipeline Qualificado: Estudo de Caso Completo.',
-      briefing: 'Aguardando validação final dos números com o diretor comercial do cliente.'
-    },
-    {
-      id: 'cnt-108',
-      clientId: 'cli-2',
-      title: 'Suplementação Inteligente: O que Realmente Tem Evidência',
-      date: d(3),
-      time: '12:00',
-      format: 'Carrossel',
-      status: 'Em produção',
-      copy: 'Antes de investir em dezenas de cápsulas, entenda o que seus exames realmente indicam.',
-      artText: 'Capa: Suplementação baseada em ciência, não em modismo.',
-      briefing: 'Design limpo em verde-sálvia e off-white com ícones minimalistas.'
-    },
-    {
-      id: 'cnt-109',
-      clientId: 'cli-5',
-      title: 'Guia de Ativos: Ácido Hialurônico vs. Niacinamida',
-      date: d(3),
-      time: '18:30',
-      format: 'Carrossel',
-      status: 'Aguardando aprovação',
-      copy: 'Hidratação profunda ou controle de oleosidade? Descubra qual ativo priorizar — ou como combinar os dois na mesma rotina.',
-      artText: 'Capa: Batalha dos Ativos — Qual a sua pele precisa hoje?',
-      briefing: 'Tabela comparativa visual no slide 4.'
-    },
-    {
-      id: 'cnt-110',
-      clientId: 'cli-4',
-      title: 'Combo Fim de Semana: 2 Pacotes + Frete Grátis Sul/Sudeste',
-      date: d(4),
-      time: '11:30',
-      format: 'Stories',
-      status: 'Planejado',
-      copy: 'Garanta seu café fresco para o fim de semana com condição especial válida por 24 horas.',
-      artText: 'Sequência de 3 stories com contagem regressiva e link direto.',
-      briefing: 'Usar sticker de contagem regressiva e foto do kit.'
-    },
-    {
-      id: 'cnt-111',
-      clientId: 'cli-3',
-      title: 'Checklist de Segurança de Dados para Times Remotos',
-      date: d(4),
-      time: '16:00',
-      format: 'Vídeo',
-      status: 'Em produção',
-      copy: '5 pontos críticos de compliance e proteção que todo gestor de TI deve revisar trimestralmente.',
-      artText: 'Thumbnail: Sua operação remota está realmente protegida?',
-      briefing: 'Roteiro técnico objetivo de 45 segundos com letterings.'
-    },
-    {
-      id: 'cnt-112',
-      clientId: 'cli-1',
-      title: 'Curadoria de Mobiliário Assinado Brasileiro',
-      date: d(5),
-      time: '10:30',
-      format: 'Estático',
-      status: 'Planejado',
-      copy: 'Peças atemporais que carregam identidade, conforto ergonômico e valorização estética.',
-      artText: 'Design Nacional: Peças-chave para salas de estar.',
-      briefing: 'Composição fotográfica com foco em madeira natural e linho.'
-    },
-    {
-      id: 'cnt-113',
-      clientId: 'cli-5',
-      title: 'Depoimentos Reais: 30 Dias de Protocolo Anti-manchas',
-      date: d(-1),
-      time: '19:00',
-      format: 'Reels',
-      status: 'Pendente',
-      copy: 'Resultados reais de quem seguiu o protocolo diário recomendado pelos nossos especialistas.',
-      artText: '30 dias de evolução real na pele.',
-      briefing: 'Falta receber o termo de autorização de imagem da paciente.'
-    }
-  ];
-};
-
-// ============================================================================
-// COMPONENTE PRINCIPAL: DASHBOARD EDITORIAL OP GROWTH DIGITAL
-// ============================================================================
-
 export function App() {
   const todayISO = useMemo(() => toISODate(new Date()), []);
 
@@ -444,13 +196,17 @@ export function App() {
   const [darkMode, setDarkMode] = useState<boolean>(false);
 
   // Estado de Autenticação Simulada (Preparado para futura integração com Auth API)
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const session = useSession();
+  const currentUser = session.user;
+  const editorial = useEditorial(currentUser?.id);
+  const { clients, contents } = editorial;
+  const [mutationBusy, setMutationBusy] = useState(false);
   const [authScreen, setAuthScreen] = useState<AuthScreen>('login');
   const [resetEmailTarget, setResetEmailTarget] = useState<string>('');
 
   // Estado principal da aplicação (Local State - preparado para API)
-  const [clients, setClients] = useState<Client[]>(createInitialClients);
-  const [contents, setContents] = useState<EditorialContent[]>(createInitialContents);
+
+
 
   // Navegação e Visualização
   const [activeModule, setActiveModule] = useState<ActiveModule>('calendar');
@@ -584,41 +340,27 @@ export function App() {
   // HANDLERS DE MUTAÇÃO (CRUD EM MEMÓRIA)
   // ==========================================================================
 
-  const handleUpdateContent = (id: string, patch: Partial<EditorialContent>) => {
-    setContents((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  const handleUpdateContent = editorial.update;
+  const handleDeleteContent = async (id: string) => {
+    if (mutationBusy) return;
+    setMutationBusy(true);
+    try { await editorial.remove(id); setEditingContentId(null); triggerToast('Publicação removida do calendário.'); }
+    catch (e) { triggerToast(errorMessage(e)); }
+    finally { setMutationBusy(false); }
   };
-
-  const handleDeleteContent = (id: string) => {
-    setContents((prev) => prev.filter((item) => item.id !== id));
-    if (editingContentId === id) setEditingContentId(null);
-    triggerToast('Publicação removida do calendário.');
+  const handleCreateContent = async (item: Omit<EditorialContent, 'id'>) => {
+    if (mutationBusy) return;
+    setMutationBusy(true);
+    try { await editorial.create(item); setIsNewContentModalOpen(false); triggerToast('Nova publicação adicionada ao planejamento.'); }
+    catch (e) { triggerToast(errorMessage(e)); }
+    finally { setMutationBusy(false); }
   };
-
-  const handleCreateContent = (newItem: Omit<EditorialContent, 'id'>) => {
-    const created: EditorialContent = {
-      ...newItem,
-      id: `cnt-${Date.now()}`
-    };
-    setContents((prev) => [...prev, created]);
-    setIsNewContentModalOpen(false);
-    triggerToast('Nova publicação adicionada ao planejamento.');
-  };
-
-  const handleSaveClient = (clientData: Omit<Client, 'id'>, existingId?: string) => {
-    if (existingId) {
-      setClients((prev) =>
-        prev.map((c) => (c.id === existingId ? { ...c, ...clientData } : c))
-      );
-      triggerToast('Dados do cliente atualizados.');
-    } else {
-      const created: Client = {
-        ...clientData,
-        id: `cli-${Date.now()}`
-      };
-      setClients((prev) => [...prev, created]);
-      triggerToast('Novo cliente cadastrado na carteira.');
-    }
-    setClientModalState({ open: false, client: null });
+  const handleSaveClient = async (item: Omit<Client, 'id'>, id?: string) => {
+    if (mutationBusy) return;
+    setMutationBusy(true);
+    try { await editorial.saveClient(item, id); setClientModalState({ open: false, client: null }); triggerToast('Cliente salvo.'); }
+    catch (e) { triggerToast(errorMessage(e)); }
+    finally { setMutationBusy(false); }
   };
 
   const toggleClientFilter = (clientId: string) => {
@@ -1818,20 +1560,20 @@ export function App() {
   // ==========================================================================
   // PORTAL DE AUTENTICAÇÃO (EXIBIDO QUANDO NÃO HÁ SESSÃO ATIVA)
   // ==========================================================================
-  if (!currentUser) {
+  if (session.loading) return <div className="min-h-screen flex items-center justify-center bg-[#F6F7FB] dark:bg-black"><Loader2 className="w-6 h-6 animate-spin text-orange-500" aria-label="Carregando sessão" /></div>;
+  if (!currentUser || session.recovery) {
     return (
       <div className={darkMode ? 'dark' : ''}>
         <AuthPortal
-          screen={authScreen}
+          screen={session.recovery ? 'reset-password' : authScreen}
           onNavigateScreen={(next) => setAuthScreen(next)}
           resetEmailTarget={resetEmailTarget}
           onSetResetEmailTarget={setResetEmailTarget}
           darkMode={darkMode}
           onToggleDarkMode={() => setDarkMode((prev) => !prev)}
-          onAuthenticated={(user) => {
-            setCurrentUser(user);
-            triggerToast(`Bem-vindo(a), ${user.name}!`);
-          }}
+          externalError={session.error}
+          onAuthenticated={() => {}}
+          onRecoveryFinished={session.finishRecovery}
         />
       </div>
     );
@@ -1843,6 +1585,12 @@ export function App() {
         style={{ fontFamily: "'Sora', sans-serif" }}
         className="min-h-screen bg-[#F6F7FB] dark:bg-[#000000] text-[#000000] dark:text-slate-100 flex antialiased transition-colors duration-200"
       >
+        {(editorial.error || editorial.loading || editorial.saving) && (
+          <div role="status" className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] rounded-xl bg-slate-900 text-white px-4 py-2 text-xs shadow-lg">
+            {editorial.error || (editorial.loading ? 'Carregando dados…' : 'Salvando alterações…')}
+            {editorial.error && <button className="ml-3 underline" onClick={() => { if(editorial.saving) void editorial.flush().catch(()=>{}); else void editorial.reload(); }}>Tentar novamente</button>}
+          </div>
+        )}
         {/* Backdrop Mobile Sidebar */}
         {sidebarOpen && (
           <div
@@ -2033,9 +1781,9 @@ export function App() {
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  setCurrentUser(null);
-                  setAuthScreen('login');
+                onClick={async () => {
+                  try { await editorial.flush(); await session.logout(); setAuthScreen('login'); }
+                  catch(e) { triggerToast(errorMessage(e)); }
                 }}
                 title="Encerrar sessão"
                 aria-label="Encerrar sessão"
@@ -2464,13 +2212,13 @@ export function App() {
               {/* Rodapé Fixo do Drawer */}
               <div className="px-5 py-3.5 border-t border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950/70 flex items-center justify-between">
                 <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Alterações salvas automaticamente na sessão
+                  {editorial.saving ? 'Salvando alterações…' : 'Alterações salvas no banco'}
                 </span>
                 <button
                   type="button"
-                  onClick={() => {
-                    setEditingContentId(null);
-                    triggerToast('Alterações aplicadas ao calendário.');
+                  onClick={async () => {
+                    try { await editorial.flush(); setEditingContentId(null); triggerToast('Alterações salvas no calendário.'); }
+                    catch(e) { triggerToast(errorMessage(e)); }
                   }}
                   className="px-4 py-2 rounded-xl bg-[#C54B00] hover:bg-[#a63f00] text-white text-xs font-semibold transition"
                 >
@@ -2779,7 +2527,9 @@ function AuthPortal({
   onSetResetEmailTarget,
   darkMode,
   onToggleDarkMode,
-  onAuthenticated
+  onAuthenticated,
+  onRecoveryFinished,
+  externalError
 }: {
   screen: AuthScreen;
   onNavigateScreen: (screen: AuthScreen) => void;
@@ -2788,27 +2538,9 @@ function AuthPortal({
   darkMode: boolean;
   onToggleDarkMode: () => void;
   onAuthenticated: (user: AuthUser) => void;
+  onRecoveryFinished: () => void;
+  externalError: string | null;
 }) {
-  // Base simulada de contas na sessão atual
-  const [mockUsers, setMockUsers] = useState<
-    (AuthUser & { password: string })[]
-  >([
-    {
-      id: 'usr-1',
-      name: 'Camila Rocha',
-      email: 'camila@opgrowth.com.br',
-      role: 'Head de Conteúdo',
-      password: 'OpGrowth@2026'
-    },
-    {
-      id: 'usr-2',
-      name: 'Lucas Mendes',
-      email: 'lucas@opgrowth.com.br',
-      role: 'Gestor de Contas',
-      password: 'OpGrowth@2026'
-    }
-  ]);
-
   // Estados compartilhados de formulário e feedback
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -2816,8 +2548,8 @@ function AuthPortal({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Campos de Login
-  const [loginEmail, setLoginEmail] = useState('camila@opgrowth.com.br');
-  const [loginPassword, setLoginPassword] = useState('OpGrowth@2026');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
@@ -2957,178 +2689,35 @@ function AuthPortal({
     return { score: 4, label: 'Forte', color: 'bg-emerald-500' };
   };
 
-  // 1. SUBMIT LOGIN
-  const handleLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-    setFormSuccess(null);
-
-    const errors: Record<string, string> = {};
-    if (!loginEmail.trim()) {
-      errors.loginEmail = 'Informe seu e-mail corporativo.';
-    } else if (!isValidEmail(loginEmail)) {
-      errors.loginEmail = 'Formato de e-mail inválido.';
-    }
-
-    if (!loginPassword) {
-      errors.loginPassword = 'Informe sua senha de acesso.';
-    } else if (loginPassword.length < 6) {
-      errors.loginPassword = 'A senha deve conter pelo menos 6 caracteres.';
-    }
-
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      const matched = mockUsers.find(
-        (u) => u.email.toLowerCase() === loginEmail.trim().toLowerCase()
-      );
-
-      if (!matched || matched.password !== loginPassword) {
-        setLoading(false);
-        setFormError(
-          'E-mail ou senha incorretos. Verifique seus dados ou use o acesso de demonstração.'
-        );
-        return;
-      }
-
-      setLoading(false);
-      onAuthenticated({
-        id: matched.id,
-        name: matched.name,
-        email: matched.email,
-        role: matched.role
-      });
-    }, 650);
-  };
-
-  // 2. SUBMIT CADASTRO
-  const handleRegisterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-    setFormSuccess(null);
-
-    const errors: Record<string, string> = {};
-    if (regName.trim().length < 3) {
-      errors.regName = 'Digite seu nome completo (mínimo 3 caracteres).';
-    }
-    if (!regEmail.trim()) {
-      errors.regEmail = 'O e-mail é obrigatório.';
-    } else if (!isValidEmail(regEmail)) {
-      errors.regEmail = 'Insira um endereço de e-mail válido.';
-    } else if (
-      mockUsers.some((u) => u.email.toLowerCase() === regEmail.trim().toLowerCase())
-    ) {
-      errors.regEmail = 'Este e-mail já está cadastrado na plataforma.';
-    }
-
-    if (regPassword.length < 8) {
-      errors.regPassword = 'Crie uma senha com no mínimo 8 caracteres.';
-    }
-    if (regConfirmPassword !== regPassword) {
-      errors.regConfirmPassword = 'As senhas digitadas não coincidem.';
-    }
-
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      const createdUser: AuthUser & { password: string } = {
-        id: `usr-${Date.now()}`,
-        name: regName.trim(),
-        email: regEmail.trim().toLowerCase(),
-        role: regRole.trim() || 'Especialista Editorial',
-        password: regPassword
-      };
-
-      setMockUsers((prev) => [...prev, createdUser]);
-      setLoading(false);
-      setFormSuccess('Conta criada com sucesso! Redirecionando para o dashboard...');
-
-      setTimeout(() => {
-        onAuthenticated({
-          id: createdUser.id,
-          name: createdUser.name,
-          email: createdUser.email,
-          role: createdUser.role
-        });
-      }, 750);
-    }, 750);
-  };
-
-  // 3. SUBMIT RECUPERAÇÃO DE SENHA
-  const handleForgotSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-    setFormSuccess(null);
-
-    const errors: Record<string, string> = {};
-    if (!forgotEmail.trim()) {
-      errors.forgotEmail = 'Informe o e-mail vinculado à sua conta.';
-    } else if (!isValidEmail(forgotEmail)) {
-      errors.forgotEmail = 'Formato de e-mail inválido.';
-    }
-
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setRecoverySent(true);
-      onSetResetEmailTarget(forgotEmail.trim().toLowerCase());
-      setFormSuccess(
-        `Instruções de recuperação enviadas para ${forgotEmail.trim().toLowerCase()}.`
-      );
-    }, 700);
-  };
-
-  // 4. SUBMIT REDEFINIÇÃO DE SENHA
-  const handleResetSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-    setFormSuccess(null);
-
-    const errors: Record<string, string> = {};
-    if (newPassword.length < 8) {
-      errors.newPassword = 'A nova senha precisa ter no mínimo 8 caracteres.';
-    }
-    if (confirmNewPassword !== newPassword) {
-      errors.confirmNewPassword = 'A confirmação não corresponde à nova senha.';
-    }
-
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      if (resetEmailTarget) {
-        setMockUsers((prev) =>
-          prev.map((u) =>
-            u.email.toLowerCase() === resetEmailTarget.toLowerCase()
-              ? { ...u, password: newPassword }
-              : u
-          )
-        );
-        setLoginEmail(resetEmailTarget);
-      }
-      setLoginPassword(newPassword);
-      setNewPassword('');
-      setConfirmNewPassword('');
-      setLoading(false);
-      setFormSuccess('Senha redefinida com sucesso! Você já pode entrar com sua nova senha.');
-
-      setTimeout(() => {
-        switchScreen('login');
-        setFormSuccess('Senha atualizada! Faça login com suas novas credenciais.');
-      }, 950);
-    }, 750);
-  };
-
   const regStrength = getPasswordStrength(regPassword);
   const resetStrength = getPasswordStrength(newPassword);
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); if(loading) return;
+    setFormError(null); setFormSuccess(null);
+    if(!isValidEmail(loginEmail) || !loginPassword){setFormError('Informe e-mail e senha.');return;}
+    setLoading(true);
+    try { onAuthenticated(await authService.signIn(loginEmail, loginPassword, rememberMe)); }
+    catch(e){setFormError(errorMessage(e));}
+    finally{setLoading(false);}
+  };
+  const handleRegisterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('O cadastro é realizado pelo administrador. Solicite seu acesso à equipe.');
+  };
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();if(loading)return;setFormError(null);setFormSuccess(null);
+    if(!isValidEmail(forgotEmail)){setFormError('Informe um e-mail válido.');return;}
+    setLoading(true);
+    try {await authService.requestRecovery(forgotEmail);setRecoverySent(true);onSetResetEmailTarget(forgotEmail.trim());setFormSuccess('Se o endereço estiver cadastrado, você receberá as instruções por e-mail.');}
+    catch(e){setFormError(errorMessage(e));}finally{setLoading(false);}
+  };
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();if(loading)return;setFormError(null);
+    if(newPassword.length<8 || newPassword!==confirmNewPassword){setFormError('Use ao menos 8 caracteres e confirme a mesma senha.');return;}
+    setLoading(true);
+    try{await authService.resetPassword(newPassword);await authService.signOut();onRecoveryFinished();switchScreen('login');setFormSuccess('Senha atualizada. Entre com sua nova senha.');}
+    catch(e){setFormError(errorMessage(e));}finally{setLoading(false);}
+  };
 
   return (
     <div
@@ -3258,7 +2847,7 @@ function AuthPortal({
           className="relative z-10 flex items-center justify-between text-[11px] text-white/55 border-t border-white/[0.08] pt-4"
         >
           <span>© {new Date().getFullYear()} Editorial Control Hub</span>
-          <span>Ambiente de Prototipação Frontend</span>
+          <span>{import.meta.env.VITE_APP_ENV === 'homologation' ? 'Ambiente de Homologação' : 'Editorial Control Hub'}</span>
         </div>
       </div>
 
@@ -3298,13 +2887,13 @@ function AuthPortal({
             className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm"
           >
             {/* Banner de Erro Global */}
-            {formError && (
+            {(formError || externalError) && (
               <div
                 role="alert"
                 className="mb-5 p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2.5"
               >
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span className="leading-relaxed">{formError}</span>
+                <span className="leading-relaxed">{formError || externalError}</span>
               </div>
             )}
 
@@ -3785,7 +3374,7 @@ function AuthPortal({
                   <div className="pt-3 border-t border-slate-100 dark:border-zinc-800">
                     <button
                       type="button"
-                      onClick={() => switchScreen('reset-password')}
+                      onClick={() => setFormSuccess('Abra o link recebido por e-mail para redefinir sua senha.')}
                       className="w-full py-2.5 px-4 rounded-xl bg-[#000055] hover:bg-[#000077] text-white text-xs font-semibold transition flex items-center justify-center gap-2"
                     >
                       <ShieldCheck className="w-4 h-4 text-[#C54B00]" />
@@ -3952,7 +3541,7 @@ function AuthPortal({
           style={getEntranceStyle('right', 8)}
           className="text-center text-[11px] text-slate-400 dark:text-slate-500"
         >
-          Credenciais de demonstração pré-preenchidas • Dados simulados em memória local
+          {import.meta.env.VITE_APP_ENV === 'homologation' ? 'Ambiente de homologação • Acesso autorizado' : 'Acesso restrito à equipe autorizada'}
         </p>
       </div>
     </div>

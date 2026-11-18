@@ -1,0 +1,77 @@
+ok 1 - signup ignora admin em metadata
+ok 2 - signup ignora is_active em metadata conforme contrato
+ok 3 - trigger BEFORE UPDATE ROW vinculado e habilitado
+ok 4 - SECURITY DEFINER com search_path restrito
+ok 5 - anon sem EXECUTE no trigger
+ok 6 - member sem EXECUTE no signup trigger
+ok 7 - helper RLS executável por authenticated
+ok 8 - anon sem EXECUTE no helper
+ok 9 - estado administrativo privado
+ok 10 - service_role sem TRUNCATE
+
+ok 11 - anon SELECT profiles negado
+ok 12 - anon SELECT clients negado
+ok 13 - anon SELECT contents negado
+ok 14 - anon INSERT negado
+ok 15 - anon UPDATE privilégios negado
+ok 16 - anon DELETE negado
+ok 17 - anon TRUNCATE negado
+
+ok 18 - inativo sem leitura de perfis
+ok 19 - inativo sem leitura de clientes
+ok 20 - inativo sem leitura de pautas
+ok 21 - inativo INSERT negado
+ok 22 - inativo não se reativa
+ok 23 - inativo UPDATE clients filtrado
+ok 24 - inativo UPDATE contents filtrado
+ok 25 - inativo DELETE profiles filtrado
+ok 26 - inativo DELETE clients filtrado
+ok 27 - inativo DELETE contents filtrado
+
+ok 28 - member lê equipe
+ok 29 - member não se promove
+ok 30 - member não altera is_active
+ok 31 - member não altera email
+ok 32 - member não altera identidade
+ok 33 - member não edita terceiros
+ok 34 - member edita nome e cargo
+ok 35 - cargo funcional efetivamente atualizado
+ok 36 - member cria cliente
+ok 37 - member atualiza cliente
+ok 38 - member não exclui cliente
+ok 39 - member não exclui perfil
+ok 40 - member atualiza publicação
+ok 41 - member não insere perfil diretamente
+ok 42 - member não usa TRUNCATE
+
+{"role":"service_role"}
+ok 43 - JWT sem sub não dá acesso
+
+ok 44 - trigger rejeita auth.uid NULL mesmo com RLS permissivo
+
+ok 45 - admin reativa usuário
+ok 46 - reativação confirmada
+ok 47 - admin promove outro usuário
+ok 48 - admin exclui perfil de membro
+ok 49 - FK bloqueia cliente com pautas
+
+ok 50 - UPDATE em lote não elimina todos os admins
+ok 51 - DELETE em lote não elimina todos os admins
+ok 52 - manutenção legítima rebaixa admins extras
+ok 53 - service_role não rebaixa último admin sem JWT
+ok 54 - service_role não desativa último admin
+ok 55 - service_role não exclui último admin
+ok 56 - service_role mantém edição legítima
+
+ok 57 - Auth admin não exclui último admin por cascata
+ok 58 - Auth admin pode excluir usuário comum
+ok 59 - cascata legítima remove perfil
+ok 60 - postgres também preserva último admin
+ok 61 - TRUNCATE administrativo explicitamente bloqueado
+ok 62 - contador final mantém um admin
+ok 63 - dados finais mantêm um admin
+ok 64 - ON CONFLICT DO NOTHING não insere linha
+ok 65 - UPSERT ignorado não duplica contador
+ok 66 - UPSERT legítimo atualiza perfil
+ok 67 - UPSERT atualizado mantém contador consistente
+1..67

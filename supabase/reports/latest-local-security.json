@@ -1,0 +1,295 @@
+{
+  "startedAt": "2026-11-18T21:18:37.302Z",
+  "scope": "PostgreSQL portátil; schema public extraído do remoto; Auth mínimo emulado; não é stack Supabase completa",
+  "migrations": [
+    {
+      "file": "20261118170000_initial_remote_schema.sql",
+      "result": "PASS",
+      "sha256": "24ba6a807ab5e7b70905926f157321b324a6b0e4a18750d0097d27d08c75ba14"
+    },
+    {
+      "file": "20261118171000_last_admin_hardening.sql",
+      "result": "PASS",
+      "sha256": "94d0463d4bba0082a1193a198a3fe649370f6c9ccecdeec72dea94355a651108"
+    },
+    {
+      "file": "20261118180000_admin_invariant.sql",
+      "result": "PASS",
+      "sha256": "c3a7347ca0c1a7ad55aba4a6e60ea8755573a10daaec57397fd017f4a37ae332"
+    },
+    {
+      "file": "20261118181000_function_permissions.sql",
+      "result": "PASS",
+      "sha256": "1a256d076cba6a1b148dd34dc0a28b7d7c338b302285a69efe2fc6d775350449"
+    },
+    {
+      "file": "20261118182000_table_permissions.sql",
+      "result": "PASS",
+      "sha256": "797d82c36fc14f1b6aadaaabffa13c4df385363b5a7ff75948f0a0f15cd9a011"
+    }
+  ],
+  "tests": [
+    {
+      "file": "admin_security_extended.test.sql",
+      "result": "PASS",
+      "assertions": 67
+    },
+    {
+      "file": "rls_security_audit.test.sql",
+      "result": "PASS",
+      "assertions": 26
+    }
+  ],
+  "concurrency": [
+    {
+      "isolation": "READ COMMITTED",
+      "first": "demote",
+      "second": "demote",
+      "blocked": true,
+      "rejected": "P0001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "READ COMMITTED",
+      "first": "demote",
+      "second": "delete",
+      "blocked": true,
+      "rejected": "P0001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "READ COMMITTED",
+      "first": "demote",
+      "second": "auth-delete",
+      "blocked": true,
+      "rejected": "P0001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "READ COMMITTED",
+      "first": "delete",
+      "second": "demote",
+      "blocked": true,
+      "rejected": "P0001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "READ COMMITTED",
+      "first": "delete",
+      "second": "delete",
+      "blocked": true,
+      "rejected": "P0001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "READ COMMITTED",
+      "first": "delete",
+      "second": "auth-delete",
+      "blocked": true,
+      "rejected": "P0001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "READ COMMITTED",
+      "first": "auth-delete",
+      "second": "demote",
+      "blocked": true,
+      "rejected": "P0001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "READ COMMITTED",
+      "first": "auth-delete",
+      "second": "delete",
+      "blocked": true,
+      "rejected": "P0001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "READ COMMITTED",
+      "first": "auth-delete",
+      "second": "auth-delete",
+      "blocked": true,
+      "rejected": "P0001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "REPEATABLE READ",
+      "first": "demote",
+      "second": "demote",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "REPEATABLE READ",
+      "first": "demote",
+      "second": "delete",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "REPEATABLE READ",
+      "first": "demote",
+      "second": "auth-delete",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "REPEATABLE READ",
+      "first": "delete",
+      "second": "demote",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "REPEATABLE READ",
+      "first": "delete",
+      "second": "delete",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "REPEATABLE READ",
+      "first": "delete",
+      "second": "auth-delete",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "REPEATABLE READ",
+      "first": "auth-delete",
+      "second": "demote",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "REPEATABLE READ",
+      "first": "auth-delete",
+      "second": "delete",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "REPEATABLE READ",
+      "first": "auth-delete",
+      "second": "auth-delete",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "SERIALIZABLE",
+      "first": "demote",
+      "second": "demote",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "SERIALIZABLE",
+      "first": "demote",
+      "second": "delete",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "SERIALIZABLE",
+      "first": "demote",
+      "second": "auth-delete",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "SERIALIZABLE",
+      "first": "delete",
+      "second": "demote",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "SERIALIZABLE",
+      "first": "delete",
+      "second": "delete",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "SERIALIZABLE",
+      "first": "delete",
+      "second": "auth-delete",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "SERIALIZABLE",
+      "first": "auth-delete",
+      "second": "demote",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "SERIALIZABLE",
+      "first": "auth-delete",
+      "second": "delete",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    },
+    {
+      "isolation": "SERIALIZABLE",
+      "first": "auth-delete",
+      "second": "auth-delete",
+      "blocked": true,
+      "rejected": "40001",
+      "activeAdmins": 1,
+      "result": "PASS"
+    }
+  ],
+  "version": "17.11",
+  "remoteAclReproduction": {
+    "anon_truncate": true,
+    "member_select": false
+  },
+  "stopped": true,
+  "finishedAt": "2026-11-18T21:19:45.494Z"
+}

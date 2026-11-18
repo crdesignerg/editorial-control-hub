@@ -1,0 +1,11 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+const url='https://raw.githubusercontent.com/theory/pgtap/v1.3.4/sql/pgtap.sql.in';
+const response=await fetch(url);
+if(!response.ok) throw new Error(`pgTAP download: HTTP ${response.status}`);
+const bytes=Buffer.from(await response.arrayBuffer());
+const sha256=createHash('sha256').update(bytes).digest('hex');
+if(sha256!=='383ecd73edfd1c7ed5f3b835134ee1fe74e201ee31599346c92ea029b65dcdce') throw new Error('Hash pgTAP inesperado');
+mkdirSync(new URL('./vendor/',import.meta.url),{recursive:true});
+writeFileSync(new URL('./vendor/pgtap.sql.in',import.meta.url),bytes);
+console.log('pgTAP 1.3.4 baixado e SHA256 verificado.');

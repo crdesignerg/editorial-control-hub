@@ -1,0 +1,11 @@
+# Supabase
+.branches
+.temp
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local
+
+# Exportações remotas brutas: revisar antes de transformar em migração.
+snapshots/

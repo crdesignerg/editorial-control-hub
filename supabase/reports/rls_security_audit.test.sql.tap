@@ -1,0 +1,32 @@
+1..26
+ok 1 - Teste 01: RLS habilitado em public.profiles
+ok 2 - Teste 02: RLS habilitado em public.clients
+ok 3 - Teste 03: RLS habilitado em public.editorial_contents
+ok 4 - Teste 04: Trigger on_auth_user_created força access_level = member mesmo se metadata enviar admin
+
+ok 5 - Teste 05: Anon sem GRANT SELECT profiles
+ok 6 - Teste 06: Anon sem GRANT SELECT clients
+ok 7 - Teste 07: Anon sem GRANT SELECT editorial_contents
+ok 8 - Teste 08: Anon bloqueado em INSERT clients (SQLSTATE 42501)
+
+ok 9 - Teste 09: Inativo bloqueado em SELECT profiles
+ok 10 - Teste 10: Inativo bloqueado em SELECT clients
+ok 11 - Teste 11: Inativo bloqueado em SELECT editorial_contents
+ok 12 - Teste 12: Inativo bloqueado em INSERT editorial_contents (SQLSTATE 42501)
+
+ok 13 - Teste 13: Colaborador ativo lê perfis da equipe
+ok 14 - Teste 14: Colaborador bloqueado ao tentar alterar próprio access_level para admin
+ok 15 - Teste 15: Colaborador não altera perfil de terceiros (0 linhas afetadas)
+ok 16 - Teste 16: Colaborador atualiza próprio nome/cargo com sucesso
+ok 17 - Teste 17: Colaborador ativo cria nova publicação
+ok 18 - Teste 18: Colaborador comum bloqueado ao tentar deletar cliente
+ok 19 - Teste 19: Colaborador ativo exclui publicação
+
+ok 20 - Teste 20: Único administrador ativo bloqueado ao tentar desativar a si mesmo
+ok 21 - Teste 21: Único administrador ativo bloqueado ao tentar rebaixar a si mesmo
+ok 22 - Teste 22: Único administrador ativo bloqueado ao tentar excluir o próprio perfil
+ok 23 - Teste 23: Administrador ativo promove segundo administrador
+ok 24 - Teste 24: Rebaixamento permitido quando permanece pelo menos 1 admin ativo
+
+ok 25 - Teste 25: FK ON DELETE RESTRICT impede excluir cliente com publicações vinculadas (SQLSTATE 23503)
+ok 26 - Teste 26: Admin exclui cliente após remover conteúdos dependentes
