@@ -4,6 +4,9 @@ const env = loadEnv('development',process.cwd(),'');
 test('visitante não vê módulos e login inválido é recusado pelo Auth real', async ({page}) => {
   await page.goto('/');
   await expect(page.locator('#login-email')).toBeVisible();
+  if (env.VITE_ALLOW_SIGNUP !== 'true') {
+    await expect(page.getByRole('button', {name:'Criar conta na equipe'})).toHaveCount(0);
+  }
   await expect(page.locator('#login-email')).toHaveValue('');
   await expect(page.locator('#login-password')).toHaveValue('');
   await page.locator('#login-email').fill('nonexistent-editorial-qa@example.invalid');

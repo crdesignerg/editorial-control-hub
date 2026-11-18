@@ -2541,6 +2541,8 @@ function AuthPortal({
   onRecoveryFinished: () => void;
   externalError: string | null;
 }) {
+  const allowPublicSignup = import.meta.env.VITE_ALLOW_SIGNUP === 'true';
+
   // Estados compartilhados de formulário e feedback
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -2671,6 +2673,11 @@ function AuthPortal({
     setFormSuccess(null);
     setFieldErrors({});
     setRecoverySent(false);
+    if (next === 'register' && !allowPublicSignup) {
+      onNavigateScreen('login');
+      setFormError('O cadastro é realizado pelo administrador. Solicite seu acesso à equipe.');
+      return;
+    }
     onNavigateScreen(next);
   };
 
@@ -3044,29 +3051,30 @@ function AuthPortal({
                   </button>
                 </div>
 
-                {/* Link para Cadastro */}
-                <div
-                  style={getEntranceStyle('right', 7)}
-                  className="pt-4 border-t border-slate-100 dark:border-zinc-800 text-center"
-                >
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Ainda não possui acesso?{' '}
-                    <button
-                      type="button"
-                      onClick={() => switchScreen('register')}
-                      className="font-bold text-[#000055] dark:text-[#ff7a29] hover:underline"
-                    >
-                      Criar conta na equipe
-                    </button>
-                  </p>
-                </div>
+                {allowPublicSignup && (
+                  <div
+                    style={getEntranceStyle('right', 7)}
+                    className="pt-4 border-t border-slate-100 dark:border-zinc-800 text-center"
+                  >
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Ainda não possui acesso?{' '}
+                      <button
+                        type="button"
+                        onClick={() => switchScreen('register')}
+                        className="font-bold text-[#000055] dark:text-[#ff7a29] hover:underline"
+                      >
+                        Criar conta na equipe
+                      </button>
+                    </p>
+                  </div>
+                )}
               </form>
             )}
 
             {/* ============================================================== */}
             {/* TELA 2: CADASTRO DE NOVOS USUÁRIOS                             */}
             {/* ============================================================== */}
-            {screen === 'register' && (
+            {screen === 'register' && allowPublicSignup && (
               <form onSubmit={handleRegisterSubmit} noValidate className="space-y-3.5">
                 <div className="mb-5">
                   <h1 className="text-xl font-extrabold text-[#000055] dark:text-white">
