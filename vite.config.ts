@@ -3,9 +3,13 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const expected = env.VITE_APP_ENV === 'homologation' ? 'cjbwmoxqkrrlryonuenn' : env.VITE_APP_ENV === 'production' ? 'ejinklwazxjzdsiwbadw' : null;
+  const isHomologation = env.VITE_APP_ENV === 'homologation';
+  const expected = isHomologation ? 'cjbwmoxqkrrlryonuenn' : env.VITE_APP_ENV === 'production' ? 'ejinklwazxjzdsiwbadw' : null;
+  const supabaseUrl = isHomologation
+    ? env.VITE_SUPABASE_HOMOLOGATION_URL || env.VITE_SUPABASE_URL
+    : env.VITE_SUPABASE_URL;
   const key = env.VITE_SUPABASE_ANON_KEY || env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!expected || env.VITE_SUPABASE_URL !== `https://${expected}.supabase.co` || !key) {
+  if (!expected || supabaseUrl !== `https://${expected}.supabase.co` || !key) {
     throw new Error('Ambiente e URL pública do Supabase incompatíveis ou ausentes.');
   }
   if (process.env.VERCEL_ENV === 'production' && env.VITE_APP_ENV !== 'production') {

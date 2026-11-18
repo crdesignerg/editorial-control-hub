@@ -16,6 +16,8 @@ Criar `.env.example` versionado no repositório e `.env.local` (ignorado no `.gi
 VITE_SUPABASE_URL=https://seu-projeto.supabase.co
 VITE_SUPABASE_ANON_KEY=sua-anon-public-key
 # Alternativamente, use VITE_SUPABASE_PUBLISHABLE_KEY no lugar da anon key.
+# Opcional no Vercel Preview: URL separada para homologação, sem alterar Production.
+VITE_SUPABASE_HOMOLOGATION_URL=https://seu-projeto-homologacao.supabase.co
 ```
 
 > **REGRA CRÍTICA:** Nunca utilize `SUPABASE_SERVICE_ROLE_KEY` no frontend. Qualquer variável prefixada com `VITE_` é embutida no bundle público gerado pelo Vite.
@@ -25,7 +27,10 @@ VITE_SUPABASE_ANON_KEY=sua-anon-public-key
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database.types';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const isHomologation = import.meta.env.VITE_APP_ENV === 'homologation';
+const supabaseUrl = isHomologation
+  ? import.meta.env.VITE_SUPABASE_HOMOLOGATION_URL || import.meta.env.VITE_SUPABASE_URL
+  : import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
   || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 

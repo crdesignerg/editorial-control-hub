@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database.types';
 
-const url = import.meta.env.VITE_SUPABASE_URL;
+const url = import.meta.env.VITE_APP_ENV === 'homologation'
+  ? import.meta.env.VITE_SUPABASE_HOMOLOGATION_URL || import.meta.env.VITE_SUPABASE_URL
+  : import.meta.env.VITE_SUPABASE_URL;
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 if (!url || !key) throw new Error('Configure as variáveis públicas do Supabase.');
 const preference = 'editorial-remember-session';
